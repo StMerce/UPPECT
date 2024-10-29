@@ -1,9 +1,8 @@
-import numpy as np
-import SimpleITK as sitk
-import matplotlib.pyplot as plt
-import scipy.ndimage as ndi
-import pandas as pd
 import os
+import numpy as np
+from SimpleITK import ReadImage, GetArrayFromImage, GetImageFromArray, WriteImage
+from scipy import ndimage as ndi
+from pandas import DataFrame
 from skimage.morphology import remove_small_objects
 
 def create_ellipsoid_structure(radius_x, radius_y, radius_z):
@@ -12,8 +11,12 @@ def create_ellipsoid_structure(radius_x, radius_y, radius_z):
     ellipsoid = (grid[0]**2 / radius_x**2 + grid[1]**2 / radius_y**2 + grid[2]**2 / radius_z**2) <= 1
     return ellipsoid
 
-def bone_filling(image_dir, seg_dir):
-    threshold_value = (-200, -27, 143, 1501)
+def bone_filling(image_dir, seg_dir, threshold_1, threshold_2, radius):
+    
+    quantification_dir = os.path.join(os.path.dirname(seg_dir), 'Quantification_out')
+    os.makedirs(quantification_dir, exist_ok=True)
+    
+    threshold_value = (-200, threshold_1, threshold_2, 1501)
     # threshold_value = (-200, 0, 201, 1501)
     # densitys = (0.92, 1.06, 1.4)
     weights = []
@@ -23,10 +26,10 @@ def bone_filling(image_dir, seg_dir):
     
     for image_file, seg_file in zip(image_files, seg_files):
         # 读取图像和分割数据
-        itk_image = sitk.ReadImage(os.path.join(image_dir, image_file))
-        npy_image = sitk.GetArrayFromImage(itk_image)
-        itk_segmentation = sitk.ReadImage(os.path.join(seg_dir, seg_file))
-        npy_segmentation = sitk.GetArrayFromImage(itk_segmentation)
+        itk_image = ReadImage(os.path.join(image_dir, image_file))
+        npy_image = GetArrayFromImage(itk_image)
+        itk_segmentation = ReadImage(os.path.join(seg_dir, seg_file))
+        npy_segmentation = GetArrayFromImage(itk_segmentation)
         
         #阈值
         npy_segmentation[npy_image < threshold_value[0]] = 0
@@ -51,7 +54,9 @@ def bone_filling(image_dir, seg_dir):
 
         # 3. 膨胀和腐蚀
         depth_structuring_element = create_ellipsoid_structure(radius_x=1.5, radius_y=0.5, radius_z=0.5)
-        height_width_structuring_element = create_ellipsoid_structure(radius_x=0.5, radius_y=6.5, radius_z=6.5)
+        
+        radius = radius-0.5
+        height_width_structuring_element = create_ellipsoid_structure(radius_x=0.5, radius_y=radius  , radius_z=radius)
 
         dilated_depth = ndi.binary_dilation(filtered_segmentation, structure=depth_structuring_element)
         dilated_final = ndi.binary_dilation(dilated_depth, structure=height_width_structuring_element)
@@ -77,6 +82,17 @@ def bone_filling(image_dir, seg_dir):
         lean_mask = fat_lean_pixels >= threshold_value[1]
         npy_segmentation[..., 1][fat_lean_mask] = np.where(lean_mask, 2, npy_segmentation[..., 1][fat_lean_mask])
         
+        # 输出量化label
+        quantification = GetImageFromArray(npy_segmentation[..., 1])
+        quantification.CopyInformation(itk_segmentation)
+
+        # 构造输出文件名
+        output_filename = f"q_{seg_file}"
+        output_path = os.path.join(quantification_dir, output_filename)
+
+        # 保存处理后的label为新的 .nii.gz 文件
+        WriteImage(quantification, output_path)
+        
         # 计算单个体素的体积
         voxel_size = np.array(itk_image.GetSpacing())
         voxel_volume = np.prod(voxel_size)
@@ -92,8 +108,9 @@ def bone_filling(image_dir, seg_dir):
                 num = np.sum(mask)
                 volume = num * voxel_volume
                 mean_hu = np.mean(npy_image[mask])
+                
+                
                 weight = volume * (mean_hu * 0.001009 + 1.003424) / 1000000
-                # weight = volume * densitys[channel2_value-1] / 1000000
                 row[index_1] = weight
                 part_weight += weight
                 index_1 += 1
@@ -123,9 +140,9 @@ def bone_filling(image_dir, seg_dir):
             "前段脂肪率", "前段瘦肉率", "前段骨率", 
             "中段脂肪率", "中段瘦肉率", "中段骨率", 
             "后段脂肪率", "后段瘦肉率", "后段骨率"]
-    traits = pd.DataFrame(weights, columns=columns)
+    traits = DataFrame(weights, columns=columns)
 
     # 将 DataFrame 写入 Excel 文件
     parent_dir = os.path.dirname(seg_dir)
-    output_file = os.path.join(parent_dir, 'test.xlsx')
+    output_file = os.path.join(parent_dir, 'Prediction_result.xlsx')
     traits.to_excel(output_file, index=False)

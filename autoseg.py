@@ -5,7 +5,7 @@ from nnunetv2.paths import nnUNet_results
 
 def perform_prediction(input_folder, output_folder):
     
-    new_output_folder = os.path.join(output_folder, "seg_nii")
+    new_output_folder = os.path.join(output_folder, "Segmentation_out")
     os.makedirs(new_output_folder, exist_ok=True)
     
     predictor = nnUNetPredictor(

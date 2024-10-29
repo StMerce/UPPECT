@@ -1,5 +1,5 @@
 import os
-from PySide6.QtWidgets import QApplication, QVBoxLayout, QHBoxLayout, QLabel, QWidget, QMainWindow, QFrame, QSizePolicy
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QWidget, QMainWindow, QFrame, QSizePolicy
 from qfluentwidgets import TransparentPushButton, PushButton, ComboBox, LineEdit, SpinBox, PrimaryPushButton, CardWidget
 from qfluentwidgets import FluentIcon as FIF
 from PySide6.QtGui import QPixmap, QFont, QIcon
@@ -10,7 +10,7 @@ class UPPECTUI(QMainWindow):
         super().__init__()
         
         # 创建字体对象
-        self.font = QFont("Arial", 12, QFont.Bold)
+        self.font = QFont("segoeui", 12)
         
         # 设置窗口标题和大小
         self.setFixedSize(900, 530)
@@ -53,7 +53,7 @@ class UPPECTUI(QMainWindow):
         profile_pic.setFixedSize(130, 130)
 
         name_label = QLabel("nnU-Net-based Pig Phenome Evaluation by CT", self)
-        name_label.setFont(QFont("Arial", 20, QFont.Bold))
+        name_label.setFont(QFont("segoeui", 20, QFont.Bold))
         name_label.setAlignment(Qt.AlignCenter)
 
         header_content_layout.addWidget(profile_pic)
@@ -64,7 +64,7 @@ class UPPECTUI(QMainWindow):
 
     def setup_content(self):
         content_frame = QFrame(self)
-        content_frame.setStyleSheet("background-color: #f0f4f9;")
+        content_frame.setStyleSheet("background-color: #f3f3f3;")
         content_layout = QVBoxLayout(content_frame)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.addSpacing(10)
@@ -91,8 +91,16 @@ class UPPECTUI(QMainWindow):
         input_label.setStyleSheet("background-color: transparent;")
         self.input_edit = LineEdit(self)
         self.input_edit.setReadOnly(True)  # 设置为只读
+        
+        self.input_edit.setStyleSheet("""
+            QLineEdit {
+                color: gray;
+                background-color: white;
+            }
+        """)
+        
         self.input_browse = PrimaryPushButton('Browse', self)
-        self.input_browse.setFont(QFont("Arial", 10, QFont.Bold))
+        self.input_browse.setFont(QFont("segoeui", 11))
         self.input_browse.setMaximumHeight(30)
 
         input_box_layout = QHBoxLayout()
@@ -108,8 +116,16 @@ class UPPECTUI(QMainWindow):
         output_label.setStyleSheet("background-color: transparent;")
         self.output_edit = LineEdit(self)
         self.output_edit.setReadOnly(True)
+        
+        self.output_edit.setStyleSheet("""
+            QLineEdit {
+                color: gray;
+                background-color: white;
+            }
+        """)
+        
         self.output_browse = PrimaryPushButton('Browse', self)
-        self.output_browse.setFont(QFont("Arial", 10, QFont.Bold))
+        self.output_browse.setFont(QFont("segoeui", 11))
         self.output_browse.setMaximumHeight(30)
 
         output_box_layout = QHBoxLayout()

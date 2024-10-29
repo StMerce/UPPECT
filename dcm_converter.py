@@ -1,9 +1,9 @@
-import SimpleITK as sitk
 import os
+from SimpleITK import ImageSeriesReader, ResampleImageFilter, sitkLinear, WriteImage
 
 def dcm_converter(dicom_directory, output_file):
 
-    reader = sitk.ImageSeriesReader()
+    reader = ImageSeriesReader()
     dicom_names = reader.GetGDCMSeriesFileNames(dicom_directory)
     reader.SetFileNames(dicom_names)
     image = reader.Execute()
@@ -15,12 +15,12 @@ def dcm_converter(dicom_directory, output_file):
 
         new_size = [int(round(osz * ospc / nspc)) for osz, ospc, nspc in zip(original_size, original_spacing, new_spacing)]
     
-        resampler = sitk.ResampleImageFilter()
+        resampler = ResampleImageFilter()
         resampler.SetSize(new_size)
         resampler.SetOutputSpacing(new_spacing)
         resampler.SetOutputOrigin(image.GetOrigin())
         resampler.SetOutputDirection(image.GetDirection())
-        resampler.SetInterpolator(sitk.sitkLinear)
+        resampler.SetInterpolator(sitkLinear)
         
         image = resampler.Execute(image)
     
@@ -32,4 +32,4 @@ def dcm_converter(dicom_directory, output_file):
     output_filename = f"{base_name}_0000.nii.gz"
 
     output_file = os.path.join(output_file, output_filename)
-    sitk.WriteImage(image, output_file, True)  # True 用于保存为压缩格式(.nii.gz)
+    WriteImage(image, output_file, True)  # True 用于保存为压缩格式(.nii.gz)
