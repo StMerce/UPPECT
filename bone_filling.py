@@ -57,13 +57,18 @@ def bone_filling(image_dir, seg_dir, threshold_1, threshold_2, radius):
         
         radius = radius-0.5
         height_width_structuring_element = create_ellipsoid_structure(radius_x=0.5, radius_y=radius  , radius_z=radius)
-
-        dilated_depth = ndi.binary_dilation(filtered_segmentation, structure=depth_structuring_element)
+        
+        # pedding
+        padded_segmentation = np.pad(filtered_segmentation, ((1,1), (0,0), (0,0)), mode='edge')
+        
+        dilated_depth = ndi.binary_dilation(padded_segmentation, structure=depth_structuring_element)
         dilated_final = ndi.binary_dilation(dilated_depth, structure=height_width_structuring_element)
         eroded_depth = ndi.binary_erosion(dilated_final, structure=depth_structuring_element)
         eroded_final = ndi.binary_erosion(eroded_depth, structure=height_width_structuring_element)
 
-        npy_segmentation[..., 1] = np.where(eroded_final, 3, 1)
+        eroded_result = eroded_final[1:-1, :, :]
+                
+        npy_segmentation[..., 1] = np.where(eroded_result, 3, 1)
         npy_segmentation[..., 1] = np.where(npy_segmentation[..., 0] == 0, 0, npy_segmentation[..., 1])
 
         # 4. 保留肌肉和脂肪的最大岛
