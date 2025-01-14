@@ -33,7 +33,7 @@ Please install the latest [PyTorch](https://pytorch.org/get-started/locally/) co
 
 ### 📥Get UPPECT
 
- Download `UPPECT.exe` from our [release page](https://github.com/StMerce/UPPECT/releases).
+ Run `git clone https://github.com/StMerce/UPPECT.git` to get UPPECT, and then run `python main.py` to use it.
 
 ### 📁 Organizing Your Input Data
 
