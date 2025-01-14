@@ -8,7 +8,7 @@
         "middle": 2,
         "back": 3
     },
-    "numTraining": 50,
+    "numTraining": 300,
     "file_ending": ".nii.gz",
     "name": "uppect",
     "reference": "uppect",
