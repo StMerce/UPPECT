@@ -33,7 +33,7 @@ Please install the latest [PyTorch](https://pytorch.org/get-started/locally/) co
 
 ### 📥Get UPPECT
 
- Download `UPPECT.exe` from our [release page](https://github.com/StMerce/UPPECT/releases).
+Run `git clone https://github.com/StMerce/UPPECT.git` to get UPPECT, and download the `checkpoint_final.pth` file from [Google Drive](https://drive.google.com/file/d/15gaaeDhWpMHTh4oXZDayZXc8rXSBZzs3/view?usp=drive_link). Place it in the `./model/fold_all/` directory, and then run `python main.py` to use UPPECT.
 
 ### 📁 Organizing Your Input Data
 
