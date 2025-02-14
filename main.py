@@ -58,12 +58,29 @@ class UPPECT(UPPECTUI):
         self.progress_dialog.contentLabel.setLayout(QVBoxLayout())
         self.progress_dialog.contentLabel.layout().addWidget(bar, alignment=Qt.AlignCenter)
         self.progress_dialog.yesButton.hide()
+        
+        self.progress_dialog.cancelButton.clicked.connect(self.terminate_thread)
+        
         self.progress_dialog.buttonLayout.insertStretch(1)
         self.progress_dialog.show()
         
     def close_progress_dialog(self):
         if hasattr(self, 'progress_dialog'):
             self.progress_dialog.close()
+    
+    def terminate_thread(self):
+        # 如果正在运行 AutoSegWorker，则调用 stop() 停止工作线程
+        if hasattr(self, 'autoseg_worker') and self.autoseg_worker.isRunning():
+            self.autoseg_worker.stop()
+            self.show_message_box("Operation cancelled", "AutoSeg processing has been terminated.")
+            self.progress_dialog.close()
+        elif hasattr(self, 'quant_worker') and self.quant_worker.isRunning():
+            self.quant_worker.stop()
+            self.show_message_box("Operation cancelled", "Quantification processing has been terminated.")
+            self.progress_dialog.close()        
+        
+        else:
+            self.show_message_box("error", "There are no ongoing processes to cancel.")
     
     def browse_input(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Input Directory")
@@ -237,6 +254,11 @@ class AutoSegWorker(QThread):
         except Exception as e:
             self.finished.emit(False, str(e))
 
+    def stop(self):
+        self.terminate()
+        self.wait()
+        print("AutoSeg has stopped.")
+        
 class QuantificationWorker(QThread):
     finished = Signal(bool, str)
     hu_thresholds_calculated = Signal(int, int)
@@ -267,7 +289,11 @@ class QuantificationWorker(QThread):
             self.finished.emit(True, "Quantification completed successfully.")
         except Exception as e:
             self.finished.emit(False, str(e))
-
+            
+    def stop(self):
+        self.terminate()
+        self.wait()
+        print("Quantification has stopped.")
 
 if __name__ == '__main__':
     app = QApplication([])
